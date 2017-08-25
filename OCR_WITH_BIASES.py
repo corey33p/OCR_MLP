@@ -177,7 +177,7 @@ class Neural_Net():
             for image in images_list: self.test("images_individual/" + image)
             continue_testing = input("Test another? y/n -----> ")
         return
-    def continuous_train(self, batch_size = 100):
+    def continuous_train(self, batch_size = 256):
         debug = False
         if debug: print("check1")
         images_list = os.listdir("images_individual")
