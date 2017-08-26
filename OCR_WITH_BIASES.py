@@ -127,15 +127,6 @@ class Neural_Net():
                 self.parent.window.guess_entry.insert(END, str(guess))
             count+=1
         return
-    def test(self, image):
-        self.parent.text_object.write("\n\n" + image)
-        layer0 = self.get_input_row(image).T
-        layer1 = 1/(1+np.exp(-(np.dot(layer0,self.weights0))))
-        layer2 = 1/(1+np.exp(-(np.dot(layer1,self.weights1))))
-        answer = 1/(1+np.exp(-(np.dot(layer2,self.weights2))))
-        for count in range (0,10):
-            self.parent.text_object.write(str(count) + ": " + str(round(answer[0][count] * 100, 4)) + "%")
-        return
     def save_weights(self):
         if not os.path.exists(os.getcwd().replace('\\','/') + '/network_save'):
             os.mkdir(os.getcwd().replace('\\','/') + '/network_save')
@@ -147,35 +138,6 @@ class Neural_Net():
         np.save(os.getcwd().replace('\\','/') + '/network_save/biases2',self.biases2)
         self.parent.text_object.write("\n\nNetwork saved!")
         self.parent.window.save_it(start=False)
-        return
-    def make_and_train(self, how_many = 100):
-        images_list = os.listdir("images_individual")
-        for image in images_list: os.remove("images_individual/" + image)
-        self.make(how_many)
-        images_list = os.listdir("images_individual")
-        time.sleep(.2)
-        np.random.shuffle(images_list)
-        self.train_list(images_list)
-        images_list = os.listdir("images_individual")
-        for image in images_list: os.remove("images_individual/" + image)
-        continue_testing = "y"
-        while continue_testing != "n":
-            images_list = os.listdir("images_individual")
-            for image in images_list: os.remove("images_individual/" + image)
-            self.make(1)
-            images_list = os.listdir("images_individual")
-            for image in images_list: self.test("images_individual/" + image)
-            continue_testing = input("Test another? y/n -----> ")
-        return
-    def continuous_test(self):
-        continue_testing = "y"
-        while continue_testing != "n":
-            images_list = os.listdir("images_individual")
-            for image in images_list: os.remove("images_individual/" + image)
-            self.make(1)
-            images_list = os.listdir("images_individual")
-            for image in images_list: self.test("images_individual/" + image)
-            continue_testing = input("Test another? y/n -----> ")
         return
     def continuous_train(self, batch_size = 256):
         debug = False
@@ -278,37 +240,11 @@ class Neural_Net():
                 except:
                     wait = input("\nPix loc: " + str(pix_loc) + "\nRGB Value: " + str(snip.getpixel(pixel)) + "\nNew position: " + str(new_position))
         return image
-    def seconds_to_time(self, seconds_in):
-        try:
-            seconds_in = float(seconds_in)
-        except:
-            self.parent.text_object.write("\nType error: non-number passed to the seconds_to_time function.")
-            return
-        if seconds_in > 3600:
-            hours = int(seconds_in // 3600)
-            minutes = int(seconds_in % 3600/60)
-            seconds = format((seconds_in % 60), '.2f')
-            result = str(hours) + "h " + str(minutes)+ "m "+ seconds + "s"
-        elif seconds_in > 60:
-            minutes = int(seconds_in // 60)
-            seconds = format(seconds_in % 60, '.2f')
-            result = str(minutes) + "m " + seconds + "s"
-        else:
-            seconds =  format(seconds_in, '.2f')
-            result = seconds + "s"
-        return result
     def get_input_row(self, pic):
         picture = Image.open(pic)
-        width, height = picture.size
-        the_array = np.empty(shape=(256,1))
-        count = 0
-        for row in range(0, height):
-            for column in range(0, width):
-                pixel = column, row
-                R, G, B = picture.getpixel(pixel)
-                the_array[count][0] = R/255
-                count += 1
-        del(picture)
+        the_array = np.array(picture)
+        the_array = the_array[...,0]
+        the_array = the_array.reshape(256,1)/256
         return the_array
     def get_correct_answer(self, filename):
         if "_" in filename:
