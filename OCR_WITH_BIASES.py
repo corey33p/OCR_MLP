@@ -22,9 +22,25 @@ class Neural_Net():
         self.parent=parent
         self.load()
         self.number_trained = 0
+        self.weights0_shape = (256,100)
+        self.weights1_shape = (100,25)
+        self.weights2_shape = (25,10)
+        self.biases0_shape = (self.weights0_shape[1],1)
+        self.biases1_shape = (self.weights1_shape[1],1)
+        self.biases2_shape = (self.weights2_shape[1],1)
         self.mean_error = 0
         self.bias_coefficient = .1
         if os.path.isfile(os.getcwd().replace('\\','/') + '/temp/stop'): os.remove(os.getcwd().replace('\\','/') + '/temp/stop')
+    def init_network(self):
+        self.weights0 = np.random.normal(0,1,self.weights0_shape)
+        self.biases0 = np.random.normal(0,1,self.biases0_shape)
+        self.weights1 = np.random.normal(0,1,self.weights1_shape)
+        self.biases1 = np.random.normal(0,1,self.biases1_shape)
+        self.weights2 = np.random.normal(0,1,self.weights2_shape)
+        self.biases2 = np.random.normal(0,1,self.biases2_shape)
+        self.parent.text_object.write("\n\nNew network loaded.")
+        self.show_shapes()
+        self.parent.window.new_network(start=False)
     def load(self):
         self.parent.text_object.write("\n")
         try:
@@ -32,39 +48,39 @@ class Neural_Net():
             self.parent.text_object.write("\nweights0 loaded from file! Shape = " + str(self.weights0.shape))
         except:
             self.parent.text_object.write("\nLoading weights0 failed -- initializing randomly")
-            self.weights0 = 2*np.random.random((256,100))-1
+            self.weights0 = np.random.normal(0,1,self.weights0_shape)
         try:
             self.biases0 = np.load(os.getcwd().replace('\\','/') + '/network_save/biases0.npy')
             self.parent.text_object.write("\nbiases0 loaded from file! Shape = " + str(self.biases0.shape))
         except:
             self.parent.text_object.write("\nLoading biases0 failed -- initializing randomly")
-            self.biases0 = 2*np.random.random((100,1))-1
+            self.biases0 = np.random.normal(0,1,self.biases0_shape)
         ####
         try:
             self.weights1 = np.load(os.getcwd().replace('\\','/') + '/network_save/weights1.npy')
             self.parent.text_object.write("\nweights1 loaded from file! Shape = " + str(self.weights1.shape))
         except:
             self.parent.text_object.write("\nLoading weights1 failed -- initializing randomly")
-            self.weights1 = 2*np.random.random((100,25))-1
+            self.weights1 = np.random.normal(0,1,self.weights1_shape)
         try:
             self.biases1 = np.load(os.getcwd().replace('\\','/') + '/network_save/biases1.npy')
             self.parent.text_object.write("\nbiases1 loaded from file! Shape = " + str(self.biases1.shape))
         except:
             self.parent.text_object.write("\nLoading biases1 failed -- initializing randomly")
-            self.biases1 = 2*np.random.random((25,1))-1
+            self.biases1 = np.random.normal(0,1,self.biases1_shape)
         ####
         try:
             self.weights2 = np.load(os.getcwd().replace('\\','/') + '/network_save/weights2.npy')
             self.parent.text_object.write("\nweights2 loaded from file! Shape = " + str(self.weights2.shape))
         except:
             self.parent.text_object.write("\nLoading weights2 failed -- initializing randomly")
-            self.weights2 = 2*np.random.random((25,10))-1
+            self.weights2 = np.random.normal(0,1,self.weights2_shape)
         try:
             self.biases2 = np.load(os.getcwd().replace('\\','/') + '/network_save/biases2.npy')
             self.parent.text_object.write("\nbiases2 loaded from file! Shape = " + str(self.biases2.shape))
         except:
             self.parent.text_object.write("\nLoading biases2 failed -- initializing randomly")
-            self.biases2 = 2*np.random.random((10,1))-1
+            self.biases2 = np.random.normal(0,1,self.biases2_shape)
         self.parent.window.load_it(start=False)
         return
     def sigmoid(self, x, deriv=False):
@@ -73,10 +89,10 @@ class Neural_Net():
         return 1/(1+np.exp(-x))
     def show_shapes(self):
         self.parent.text_object.write("\n\nweights0 shape: " + str(self.weights0.shape))
-        self.parent.text_object.write("\nweights1 shape: " + str(self.weights1.shape))
-        self.parent.text_object.write("\nweights2 shape: " + str(self.weights2.shape))
         self.parent.text_object.write("\nbiases0 shape: " + str(self.biases0.shape))
+        self.parent.text_object.write("\nweights1 shape: " + str(self.weights1.shape))
         self.parent.text_object.write("\nbiases1 shape: " + str(self.biases1.shape))
+        self.parent.text_object.write("\nweights2 shape: " + str(self.weights2.shape))
         self.parent.text_object.write("\nbiases2 shape: " + str(self.biases2.shape))
         return
     def train_list(self, images_list):
@@ -121,10 +137,13 @@ class Neural_Net():
             self.parent.text_object.overwrite("Images ran: " + str(count) + " out of " + str(length_list) + "; Error: " + str(self.mean_error))
             self.number_trained += 1
             if count % 255 == 0:
-                self._im = ImageTk.PhotoImage(Image.open(image_name).resize((250,250), Image.ANTIALIAS))
-                self.parent.window.canvas.create_image((0,0), anchor=NW, image=self._im)
-                self.parent.window.guess_entry.delete(0, END)
-                self.parent.window.guess_entry.insert(END, str(guess))
+                try:
+                    self._im = ImageTk.PhotoImage(Image.open(image_name).resize((250,250), Image.ANTIALIAS))
+                    self.parent.window.canvas.create_image((0,0), anchor=NW, image=self._im)
+                    self.parent.window.guess_entry.delete(0, END)
+                    self.parent.window.guess_entry.insert(END, str(guess))
+                except:
+                    print("Can't open images_individual/" + image + " for the display because the OS thinks it's in use.")
             count+=1
         return
     def save_weights(self):
@@ -139,7 +158,9 @@ class Neural_Net():
         self.parent.text_object.write("\n\nNetwork saved!")
         self.parent.window.save_it(start=False)
         return
-    def continuous_train(self, batch_size = 256):
+    def continuous_train(self, batch_size = 1024):
+        if os.path.isfile(os.getcwd().replace('\\','/') + '/temp/stop'): os.remove(os.getcwd().replace('\\','/') + '/temp/stop')
+        self.parent.window.stop_button.config(state=NORMAL)
         debug = False
         if debug: print("check1")
         images_list = os.listdir("images_individual")
@@ -153,7 +174,11 @@ class Neural_Net():
             images_list = os.listdir("images_individual")
             np.random.shuffle(images_list)
             self.train_list(images_list)
-            for image in images_list: os.remove("images_individual/" + image)
+            for image in images_list: 
+                try:
+                    os.remove("images_individual/" + image)
+                except:
+                    print("Can't delete images_individual/" + image + " because the OS thinks it's in use.")
             self.parent.text_object.write("\nNumber trained: " + str(self.number_trained))
         os.remove(os.getcwd().replace('\\','/') + "/temp/stop")
         self.parent.window.train_thread(start=False)
@@ -241,10 +266,15 @@ class Neural_Net():
                     wait = input("\nPix loc: " + str(pix_loc) + "\nRGB Value: " + str(snip.getpixel(pixel)) + "\nNew position: " + str(new_position))
         return image
     def get_input_row(self, pic):
-        picture = Image.open(pic)
+        try:
+            picture = Image.open(pic)
+        except:
+            print("Couldn't open image " + pic + " because the OS thinks its in use.")
+            return np.zeros((256,1))
         the_array = np.array(picture)
         the_array = the_array[...,0]
         the_array = the_array.reshape(256,1)/256
+        del(picture)
         return the_array
     def get_correct_answer(self, filename):
         if "_" in filename:
@@ -295,7 +325,11 @@ class window:
 
         control_panel_frame = ttk.Frame(self.master)
         control_panel_frame.grid(row=2,column=1, rowspan=10, sticky=E)
-
+        #
+        self.new_network_button = Button(control_panel_frame, text = 'New Network', command = lambda: self.new_network())
+        self.new_network_button.grid(row=0, column=1, sticky=NSEW)
+        self.new_network_button.config(font=self.main_font)
+        #
         check_shapes = Button(control_panel_frame, text = 'Check Shapes', command = lambda: self.parent.neural_net.show_shapes())
         check_shapes.grid(row=2, column=1, sticky=NSEW)
         check_shapes.config(font=self.main_font)
@@ -317,7 +351,7 @@ class window:
         self.load_button.config(font=self.main_font)
         #
         self.quit_button = Button(control_panel_frame, text = 'Quit', command = lambda: self.quit())
-        self.quit_button.grid(row=7, column=1, sticky=NSEW)
+        self.quit_button.grid(row=8, column=1, sticky=NSEW)
         self.quit_button.config(font=self.main_font)
     def train_thread(self, start=True):
         if start:
@@ -345,6 +379,13 @@ class window:
             self.parent.main_queue.put(lambda: self.parent.neural_net.load())
         else:
             self.load_button.config(state=NORMAL)
+    def new_network(self, start=True):
+        if start:
+            self.new_network_button.config(state=DISABLED)
+            self.stop_it()
+            self.parent.main_queue.put(lambda: self.parent.neural_net.init_network())
+        else:
+            self.new_network_button.config(state=NORMAL)
     def quit(self):
         self.quit_button.config(state=DISABLED)
         self.stop_it()
@@ -362,6 +403,7 @@ class parent:
         mainloop()
     def main_queue_thread(self):
         while not self.quit: # handle objects in the queue until game_lost
+            time.sleep(.25)
             try:
                 next_action = self.main_queue.get(False)
                 next_action()
