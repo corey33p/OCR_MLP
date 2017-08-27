@@ -30,7 +30,7 @@ class Neural_Net():
         self.biases2_shape = (self.weights2_shape[1],1)
         self.mean_error = 0
         self.bias_coefficient = .1
-        if os.path.isfile(os.getcwd().replace('\\','/') + '/temp/stop'): os.remove(os.getcwd().replace('\\','/') + '/temp/stop')
+        self.stop_training = False
     def init_network(self):
         self.weights0 = np.random.normal(0,1,self.weights0_shape)
         self.biases0 = np.random.normal(0,1,self.biases0_shape)
@@ -159,7 +159,7 @@ class Neural_Net():
         self.parent.window.save_it(start=False)
         return
     def continuous_train(self, batch_size = 1024):
-        if os.path.isfile(os.getcwd().replace('\\','/') + '/temp/stop'): os.remove(os.getcwd().replace('\\','/') + '/temp/stop')
+        if self.stop_training: self.stop_training = False
         self.parent.window.stop_button.config(state=NORMAL)
         debug = False
         if debug: print("check1")
@@ -169,7 +169,7 @@ class Neural_Net():
         if debug: print("check3")
         self.parent.text_object.write("\n\nTraining...")
         if debug: print("check4")
-        while not os.path.isfile(os.getcwd().replace('\\','/') + "/temp/stop"):
+        while not self.stop_training:
             self.make(batch_size)
             images_list = os.listdir("images_individual")
             np.random.shuffle(images_list)
@@ -180,7 +180,7 @@ class Neural_Net():
                 except:
                     print("Can't delete images_individual/" + image + " because the OS thinks it's in use.")
             self.parent.text_object.write("\nNumber trained: " + str(self.number_trained))
-        os.remove(os.getcwd().replace('\\','/') + "/temp/stop")
+        self.stop_training = False
         self.parent.window.train_thread(start=False)
         self.parent.window.stop_button.config(state=NORMAL)
         return
@@ -363,8 +363,7 @@ class window:
             self.train_button.config(state=NORMAL)
     def stop_it(self):
         self.stop_button.config(state=DISABLED)
-        file = open("temp/stop", 'w')
-        file.close()
+        self.parent.neural_net.stop_training = True
     def save_it(self, start=True):
         if start:
             self.save_button.config(state=DISABLED)
